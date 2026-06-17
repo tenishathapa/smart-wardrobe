@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center min-vh-100 align-items-center" style="margin-top: -2rem;">
+  <div class="col-lg-4 col-md-6">
+    <div class="auth-card card position-relative">
+      <div class="card-header" style="padding: 2.5rem 2rem;">
+        <div style="font-size: 2.5rem; color: #fff; margin-bottom: 0.5rem;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M6 6h12v12H6z M9 9h6v6H9z M3 3h3v3H3z M18 3h3v3h-3z M3 18h3v3H3z M18 18h3v3h-3z M9 6V3 M15 6V3 M9 21v-3 M15 21v-3 M6 9H3 M21 9h-3 M6 15H3 M21 15h-3"/>
+          </svg>
+        </div>
+        <h3 style="font-size: 1.6rem;">Welcome Back</h3>
+        <p style="color: rgba(255,255,255,0.8); font-family: var(--font-body); font-size: 0.9rem; margin: 0;">Sign in to your wardrobe</p>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Sign In</button>
+        </form>
+        <p class="text-center mt-4 mb-0" style="color: var(--text-muted); font-size: 0.9rem;">
+          New here? <a href="{{ url_for('auth.register') }}" style="color: var(--pink); font-weight: 600; text-decoration: none;">Create Account</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

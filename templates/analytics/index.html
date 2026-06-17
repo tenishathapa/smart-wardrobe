@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="page-title animate-fadeIn">Analytics</h2>
+
+<div class="row g-4">
+  <div class="col-md-6 animate-fadeIn">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body">
+        <h5 style="font-family: var(--font-display);"><i class="bi bi-trophy-fill" style="color: var(--gold);"></i> Most Worn Outfits</h5>
+        <canvas id="mostWornChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 animate-slideUp">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body">
+        <h5 style="font-family: var(--font-display);"><i class="bi bi-palette-fill" style="color: var(--pink);"></i> Color Distribution</h5>
+        <canvas id="colorChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 animate-slideUp">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body">
+        <h5 style="font-family: var(--font-display);"><i class="bi bi-sun-fill" style="color: var(--gold);"></i> Season Distribution</h5>
+        <canvas id="seasonChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+new Chart(document.getElementById('mostWornChart'), {
+  type: 'bar',
+  data: {
+    labels: [{% for o in most_worn %}'{{ o.name }}',{% endfor %}],
+    datasets: [{
+      label: 'Times Worn',
+      data: [{% for o in most_worn %}{{ o.count }},{% endfor %}],
+      backgroundColor: 'rgba(232, 67, 147, 0.5)',
+      borderColor: '#e84393',
+      borderWidth: 2,
+      borderRadius: 6
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+});
+
+new Chart(document.getElementById('colorChart'), {
+  type: 'doughnut',
+  data: {
+    labels: [{% for c in color_pcts %}'{{ c[0] }}',{% endfor %}],
+    datasets: [{
+      data: [{% for c in color_pcts %}{{ c[1] }},{% endfor %}],
+      backgroundColor: ['#e84393', '#fd79a8', '#b39ddb', '#d4a574', '#c0295e', '#e8deff', '#f0d5b0', '#ffe8f0']
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Quicksand' } } } } }
+});
+
+new Chart(document.getElementById('seasonChart'), {
+  type: 'pie',
+  data: {
+    labels: [{% for s in season_pcts %}'{{ s[0] }}',{% endfor %}],
+    datasets: [{
+      data: [{% for s in season_pcts %}{{ s[1] }},{% endfor %}],
+      backgroundColor: ['#e84393', '#b39ddb', '#d4a574', '#fd79a8']
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Quicksand' } } } } }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center animate-fadeIn">
+  <div class="col-lg-6">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h3 class="mb-1" style="font-family: var(--font-display);">{{ outfit.name }}</h3>
+            <small style="color: var(--text-muted);"><i class="bi bi-calendar3"></i> Created {{ outfit.created_at.strftime('%b %d, %Y') }}</small>
+          </div>
+          <form method="POST" action="{{ url_for('outfits.favorite', outfit_id=outfit.id) }}" class="d-inline">
+            <button class="btn btn-sm p-0 border-0 bg-transparent">
+              <i class="bi {{ 'bi-star-fill' if outfit.is_favorite else 'bi-star' }}" style="color: {{ 'var(--gold)' if outfit.is_favorite else 'var(--text-light)' }}; font-size: 1.8rem;"></i>
+            </button>
+          </form>
+        </div>
+
+        <div class="row g-3 mt-2">
+          {% for item in outfit.items %}
+          <div class="col-6">
+            <div class="card" style="border: 1px solid var(--border); border-radius: 14px; overflow: hidden;">
+              {% if item.clothing_item.image_path %}
+              <img src="{{ url_for('static', filename='uploads/' + item.clothing_item.image_path) }}" class="card-img-top" alt="{{ item.clothing_item.name }}" style="height: 150px; object-fit: cover;">
+              {% else %}
+              <div style="height: 150px; background: var(--pink-soft); display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-image" style="font-size: 2rem; color: var(--text-light);"></i>
+              </div>
+              {% endif %}
+              <div class="card-body p-2 text-center">
+                <small style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.7rem;">{{ item.slot }}</small>
+                <p class="mb-0 small" style="font-weight: 600;">{{ item.clothing_item.name }}</p>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-4 d-flex gap-2 flex-wrap">
+          <a href="{{ url_for('outfits.edit', outfit_id=outfit.id) }}" class="btn btn-primary"><i class="bi bi-pencil"></i> Edit</a>
+          <a href="{{ url_for('calendar.index') }}" class="btn btn-success"><i class="bi bi-calendar-plus"></i> Plan</a>
+          <a href="{{ url_for('outfits.index') }}" class="btn btn-outline-primary"><i class="bi bi-arrow-left"></i> Back</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

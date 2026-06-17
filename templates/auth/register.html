@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center min-vh-100 align-items-center" style="margin-top: -2rem;">
+  <div class="col-lg-4 col-md-6">
+    <div class="auth-card card position-relative">
+      <div class="card-header" style="padding: 2.5rem 2rem;">
+        <div style="font-size: 2.5rem; color: #fff; margin-bottom: 0.5rem;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h3 style="font-size: 1.6rem;">Join the Club</h3>
+        <p style="color: rgba(255,255,255,0.8); font-family: var(--font-body); font-size: 0.9rem; margin: 0;">Start building your dream wardrobe</p>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Your name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Create a password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Create Account</button>
+        </form>
+        <p class="text-center mt-4 mb-0" style="color: var(--text-muted); font-size: 0.9rem;">
+          Already have an account? <a href="{{ url_for('auth.login') }}" style="color: var(--pink); font-weight: 600; text-decoration: none;">Sign In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

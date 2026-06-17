@@ -1,0 +1,135 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 animate-fadeIn">
+  <div>
+    <h2 class="page-title mb-0">Dashboard</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">Your wardrobe at a glance</p>
+  </div>
+  <svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="opacity: 0.1;">
+    <circle cx="40" cy="40" r="38" stroke="url(#pinkGrad)" stroke-width="2"/>
+    <circle cx="40" cy="40" r="28" stroke="url(#pinkGrad)" stroke-width="1.5"/>
+    <circle cx="40" cy="40" r="18" stroke="url(#pinkGrad)" stroke-width="1"/>
+    <circle cx="40" cy="15" r="4" fill="url(#pinkGrad)"/>
+    <circle cx="40" cy="65" r="4" fill="url(#pinkGrad)"/>
+    <circle cx="15" cy="40" r="4" fill="url(#pinkGrad)"/>
+    <circle cx="65" cy="40" r="4" fill="url(#pinkGrad)"/>
+  </svg>
+</div>
+
+<div class="row g-4 animate-fadeIn">
+  <div class="col-md-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6>Total Clothes</h6>
+            <h3 class="mb-0">{{ total_clothes }}</h3>
+          </div>
+          <div class="stat-icon" style="background: rgba(232,67,147,0.1); color: var(--pink);">
+            <i class="bi bi-hanger"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6>Total Outfits</h6>
+            <h3 class="mb-0">{{ total_outfits }}</h3>
+          </div>
+          <div class="stat-icon" style="background: rgba(179,157,219,0.1); color: var(--lavender);">
+            <i class="bi bi-palette-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6>Planned Outfits</h6>
+            <h3 class="mb-0">{{ planned_outfits }}</h3>
+          </div>
+          <div class="stat-icon" style="background: rgba(212,165,116,0.1); color: var(--gold);">
+            <i class="bi bi-calendar-check-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6>Today's Weather</h6>
+            {% if weather %}
+              <h3 class="mb-0">{{ weather.temp }}°C</h3>
+              <small style="color: var(--text-muted);">{{ weather.description }}</small>
+            {% else %}
+              <h3 class="mb-0">--</h3>
+              <small style="color: var(--text-muted);">No data</small>
+            {% endif %}
+          </div>
+          <div class="stat-icon" style="background: rgba(179,157,219,0.1); color: var(--lavender);">
+            <i class="bi bi-cloud-sun-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if recommendations %}
+<div class="row mt-4 animate-slideUp">
+  <div class="col-12">
+    <div class="card" style="border-left: 4px solid var(--pink); border-radius: 16px;">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div style="width: 40px; height: 40px; background: rgba(232,67,147,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+            <i class="bi bi-lightbulb-fill" style="color: var(--gold);"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">Today's Recommendations</h5>
+            <small style="color: var(--text-muted);">Based on current weather</small>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          {% for r in recommendations %}
+          <span style="background: var(--pink-lighter); color: var(--pink-deep); padding: 8px 16px; border-radius: 10px; font-weight: 500; font-size: 0.85rem;">
+            <i class="bi bi-dot"></i> {{ r }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row mt-4 animate-slideUp">
+  <div class="col-12">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div style="width: 40px; height: 40px; background: rgba(212,165,116,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+            <i class="bi bi-lightning-fill" style="color: var(--gold);"></i>
+          </div>
+          <h5 class="mb-0">Quick Actions</h5>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{{ url_for('wardrobe.add') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Clothing</a>
+          <a href="{{ url_for('outfits.builder') }}" class="btn btn-success"><i class="bi bi-plus-lg"></i> Create Outfit</a>
+          <a href="{{ url_for('calendar.index') }}" class="btn btn-warning"><i class="bi bi-calendar"></i> Plan Outfit</a>
+          <a href="{{ url_for('outfits.favorites') }}" class="btn btn-outline-primary"><i class="bi bi-star-fill"></i> Favorites</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

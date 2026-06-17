@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center animate-fadeIn">
+  <div class="col-lg-6">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body p-4">
+        <h3 class="mb-1" style="font-family: var(--font-display);">{{ 'Edit' if item else 'Add' }} Clothing Item</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">{{ 'Update the details' if item else 'Add a new piece to your wardrobe' }}</p>
+        <form method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" value="{{ item.name if item else '' }}" placeholder="e.g. White Shirt" required>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Category</label>
+              <select name="category" class="form-select" required>
+                <option value="">Select...</option>
+                {% for cat in ['Top', 'Bottom', 'Shoes', 'Accessory', 'Outerwear', 'Dress'] %}
+                <option value="{{ cat }}" {{ 'selected' if item and item.category == cat }}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Color</label>
+              <input type="text" name="color" class="form-control" value="{{ item.color if item else '' }}" placeholder="e.g. White" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Season</label>
+              <select name="season" class="form-select" required>
+                <option value="">Select...</option>
+                {% for s in ['Summer', 'Winter', 'Spring', 'Fall', 'All Season'] %}
+                <option value="{{ s }}" {{ 'selected' if item and item.season == s }}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Occasion</label>
+              <select name="occasion" class="form-select" required>
+                <option value="">Select...</option>
+                {% for o in ['Casual', 'Formal', 'Party', 'Sports', 'Interview', 'Business', 'Beach', 'Home'] %}
+                <option value="{{ o }}" {{ 'selected' if item and item.occasion == o }}>{{ o }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="mb-3 mt-3">
+            <label class="form-label">Image</label>
+            <input type="file" name="image" id="imageInput" class="form-control" accept="image/*">
+            <img id="imagePreview" class="image-preview" src="#" alt="Preview">
+            {% if item and item.image_path %}
+            <div class="mt-2">
+              <img src="{{ url_for('static', filename='uploads/' + item.image_path) }}" class="image-preview show" alt="Current">
+              <small style="color: var(--text-muted); display: block;">Current image. Upload to replace.</small>
+            </div>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">{{ 'Save Changes' if item else 'Add to Wardrobe' }}</button>
+            <a href="{{ url_for('wardrobe.index') }}" class="btn btn-outline-primary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

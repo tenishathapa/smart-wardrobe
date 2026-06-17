@@ -1,0 +1,114 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="page-title animate-fadeIn">Outfit Calendar</h2>
+
+<div class="row g-4">
+  <div class="col-lg-8 animate-fadeIn">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <a href="{{ url_for('calendar.index', year=year if month > 1 else year-1, month=month-1 if month > 1 else 12) }}" class="btn btn-outline-primary btn-sm">&laquo;</a>
+          <h4 class="mb-0" style="font-family: var(--font-display);">{{ datetime(year, month, 1).strftime('%B %Y') }}</h4>
+          <a href="{{ url_for('calendar.index', year=year if month < 12 else year+1, month=month+1 if month < 12 else 1) }}" class="btn btn-outline-primary btn-sm">&raquo;</a>
+        </div>
+        <table class="table text-center calendar-table" style="margin-bottom: 0;">
+          <thead>
+            <tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr>
+          </thead>
+          <tbody>
+            {% set start_day = datetime(year, month, 1).weekday() %}
+            {% set days_in_month = (datetime(year, month + 1, 1) - datetime(year, month, 1)).days if month < 12 else (datetime(year + 1, 1, 1) - datetime(year, month, 1)).days %}
+            {% for week in range(0, 6) %}
+            <tr>
+              {% for day in range(0, 7) %}
+                {% set day_num = week * 7 + day - ((start_day + 1) % 7) %}
+                {% if day_num > 0 and day_num <= days_in_month %}
+                  {% set date_str = "%04d-%02d-%02d"|format(year, month, day_num) %}
+                  <td class="calendar-day {{ 'today' if day_num == today.day and month == today.month and year == today.year else '' }}">
+                    <strong>{{ day_num }}</strong>
+                    {% if date_str in planned_by_date %}
+                      {% for p in planned_by_date[date_str] %}
+                        <div class="planned-badge">
+                          <span style="flex:1;">{{ p.outfit.name }}</span>
+                          <form method="POST" action="{{ url_for('calendar.remove', plan_id=p.id) }}" class="d-inline">
+                            <button class="btn btn-sm p-0 border-0" style="color: #c0392b;" title="Remove"><i class="bi bi-x"></i></button>
+                          </form>
+                          <form method="POST" action="{{ url_for('calendar.wear') }}" class="d-inline">
+                            <input type="hidden" name="outfit_id" value="{{ p.outfit_id }}">
+                            <input type="hidden" name="date" value="{{ date_str }}">
+                            <button class="btn btn-sm p-0 border-0" style="color: #5a4a7a;" title="Mark worn"><i class="bi bi-check"></i></button>
+                          </form>
+                        </div>
+                      {% endfor %}
+                    {% endif %}
+                  </td>
+                {% else %}
+                  <td></td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 animate-slideUp">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div style="width: 36px; height: 36px; background: rgba(232,67,147,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-calendar-plus-fill" style="color: var(--pink);"></i>
+          </div>
+          <h5 class="mb-0" style="font-family: var(--font-display);">Plan an Outfit</h5>
+        </div>
+        <form method="POST" action="{{ url_for('calendar.add') }}">
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Outfit</label>
+            <select name="outfit_id" class="form-select" required>
+              <option value="">Select outfit...</option>
+              {% for o in outfits %}
+              <option value="{{ o.id }}">{{ o.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Plan It</button>
+        </form>
+        <hr style="border-color: var(--border);">
+        <a href="{{ url_for('calendar.history') }}" class="btn btn-outline-primary w-100"><i class="bi bi-clock-history"></i> Wear History</a>
+      </div>
+    </div>
+
+    <div class="card mt-3" style="border: 1px solid var(--border);">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div style="width: 36px; height: 36px; background: rgba(179,157,219,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-check-circle-fill" style="color: var(--lavender);"></i>
+          </div>
+          <h5 class="mb-0" style="font-family: var(--font-display);">Mark as Worn</h5>
+        </div>
+        <form method="POST" action="{{ url_for('calendar.wear') }}">
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control" value="{{ today.strftime('%Y-%m-%d') }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Outfit</label>
+            <select name="outfit_id" class="form-select" required>
+              <option value="">Select outfit...</option>
+              {% for o in outfits %}
+              <option value="{{ o.id }}">{{ o.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-success w-100">Worn It!</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
