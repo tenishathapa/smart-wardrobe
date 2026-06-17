@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
+import uuid
 from models.clothing import ClothingItem
 from models.outfit import OutfitItem
 from models.history import WearHistory
@@ -16,10 +17,17 @@ def allowed_file(filename):
 
 def save_image(file):
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+        upload_folder = current_app.config["UPLOAD_FOLDER"]
+        os.makedirs(upload_folder, exist_ok=True)
+
+        ext = os.path.splitext(file.filename)[1]
+        filename = f"{uuid.uuid4().hex}{ext}"
+
+        path = os.path.join(upload_folder, filename)
         file.save(path)
+
         return filename
+
     return None
 
 
