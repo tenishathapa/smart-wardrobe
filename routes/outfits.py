@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from models.clothing import ClothingItem
 from models.outfit import Outfit, OutfitItem
+from models.history import WearHistory
 from utils.color_match import get_compatible_colors, COLOR_RULES
 
 outfits_bp = Blueprint("outfits", __name__)
@@ -20,11 +21,12 @@ def index():
 def builder():
     if request.method == "POST":
         name = request.form.get("name")
+        notes = request.form.get("notes")
         if not name:
             flash("Outfit name is required.", "danger")
             return redirect(url_for("outfits.builder"))
 
-        outfit = Outfit(user_id=current_user.id, name=name)
+        outfit = Outfit(user_id=current_user.id, name=name, notes=notes)
         db.session.add(outfit)
         db.session.flush()
 
@@ -60,6 +62,7 @@ def edit(outfit_id):
 
     if request.method == "POST":
         outfit.name = request.form.get("name")
+        outfit.notes = request.form.get("notes")
 
         OutfitItem.query.filter_by(outfit_id=outfit.id).delete()
 
@@ -91,6 +94,23 @@ def delete(outfit_id):
     return redirect(url_for("outfits.index"))
 
 
+@outfits_bp.route("/duplicate/<int:outfit_id>", methods=["POST"])
+@login_required
+def duplicate(outfit_id):
+    original = Outfit.query.filter_by(id=outfit_id, user_id=current_user.id).first_or_404()
+
+    clone = Outfit(user_id=current_user.id, name=original.name + " (Copy)", notes=original.notes)
+    db.session.add(clone)
+    db.session.flush()
+
+    for oi in original.items.all():
+        db.session.add(OutfitItem(outfit_id=clone.id, clothing_item_id=oi.clothing_item_id, slot=oi.slot))
+
+    db.session.commit()
+    flash("Outfit duplicated.", "success")
+    return redirect(url_for("outfits.view", outfit_id=clone.id))
+
+
 @outfits_bp.route("/favorite/<int:outfit_id>", methods=["POST"])
 @login_required
 def favorite(outfit_id):
@@ -98,6 +118,51 @@ def favorite(outfit_id):
     outfit.is_favorite = not outfit.is_favorite
     db.session.commit()
     return redirect(request.referrer or url_for("outfits.index"))
+
+
+@outfits_bp.route("/generate", methods=["POST"])
+@login_required
+def generate():
+    from random import shuffle
+
+    def item_wear_count(item_id):
+        return (
+            db.session.query(db.func.count(WearHistory.id))
+            .join(OutfitItem, WearHistory.outfit_id == OutfitItem.outfit_id)
+            .filter(OutfitItem.clothing_item_id == item_id, WearHistory.user_id == current_user.id)
+            .scalar()
+            or 0
+        )
+
+    slots = {"top": "Top", "bottom": "Bottom", "shoes": "Shoes", "accessory": "Accessory"}
+    selected = []
+    name_parts = []
+
+    for slot_key, category in slots.items():
+        items = ClothingItem.query.filter_by(user_id=current_user.id, category=category).all()
+        if not items:
+            continue
+        items.sort(key=lambda i: item_wear_count(i.id))
+        shuffle(items[:max(2, len(items))])
+        chosen = items[0]
+        selected.append((slot_key, chosen))
+        name_parts.append(chosen.name)
+
+    if len(selected) < 2:
+        flash("Add more clothing items to generate outfits.", "warning")
+        return redirect(url_for("outfits.builder"))
+
+    outfit = Outfit(user_id=current_user.id, name="Auto-Generated Outfit")
+    db.session.add(outfit)
+    db.session.flush()
+
+    for slot_key, item in selected:
+        oi = OutfitItem(outfit_id=outfit.id, clothing_item_id=item.id, slot=slot_key)
+        db.session.add(oi)
+
+    db.session.commit()
+    flash("Outfit generated from your least-worn items!", "success")
+    return redirect(url_for("outfits.view", outfit_id=outfit.id))
 
 
 @outfits_bp.route("/favorites")

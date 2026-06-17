@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center animate-fadeIn">
+  <div class="col-lg-6">
+    <div class="card" style="border: 1px solid var(--border);">
+      <div class="card-body p-4">
+        <h3 class="mb-1" style="font-family: var(--font-display);">{{ 'Edit' if item else 'Add' }} Wishlist Item</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Save something you want to buy</p>
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" value="{{ item.name if item else '' }}" placeholder="e.g. Leather Jacket" required>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Category</label>
+              <select name="category" class="form-select">
+                <option value="">Select...</option>
+                {% for cat in ['Top', 'Bottom', 'Shoes', 'Accessory', 'Outerwear', 'Dress', 'Bag', 'Jewelry'] %}
+                <option value="{{ cat }}" {{ 'selected' if item and item.category == cat }}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Color</label>
+              <input type="text" name="color" class="form-control" value="{{ item.color if item else '' }}" placeholder="e.g. Black">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Season</label>
+              <select name="season" class="form-select">
+                <option value="">Any</option>
+                {% for s in ['Summer', 'Winter', 'Spring', 'Fall'] %}
+                <option value="{{ s }}" {{ 'selected' if item and item.season == s }}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Price ($)</label>
+              <input type="number" name="price" class="form-control" step="0.01" min="0" value="{{ item.price if item else '' }}" placeholder="0.00">
+            </div>
+          </div>
+          <div class="mb-3 mt-3">
+            <label class="form-label">Shop URL</label>
+            <input type="url" name="url" class="form-control" value="{{ item.url if item else '' }}" placeholder="https://...">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="Why you want it...">{{ item.notes if item else '' }}</textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">{{ 'Save' if item else 'Add to Wishlist' }}</button>
+            <a href="{{ url_for('wishlist.index') }}" class="btn btn-outline-primary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

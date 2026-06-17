@@ -31,9 +31,12 @@
           {% endfor %}
         </div>
       </div>
-      <div class="card-footer d-flex gap-2">
+      <div class="card-footer d-flex gap-2 flex-wrap">
         <a href="{{ url_for('outfits.view', outfit_id=outfit.id) }}" class="btn btn-sm btn-primary">View</a>
         <a href="{{ url_for('outfits.edit', outfit_id=outfit.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+        <form method="POST" action="{{ url_for('outfits.duplicate', outfit_id=outfit.id) }}" style="display:inline;">
+          <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-files"></i></button>
+        </form>
         <form method="POST" action="{{ url_for('outfits.delete', outfit_id=outfit.id) }}" onsubmit="return confirm('Delete {{ outfit.name }}?')">
           <button type="submit" class="btn btn-sm" style="background: #fde8e0; color: #c0392b; border: none; border-radius: 8px;">Delete</button>
         </form>

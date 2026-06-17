@@ -32,3 +32,18 @@ class PackingListItem(db.Model):
     packing_list_id = db.Column(db.Integer, db.ForeignKey("packing_lists.id"), nullable=False)
     clothing_item_id = db.Column(db.Integer, db.ForeignKey("clothing_items.id"), nullable=False)
     quantity = db.Column(db.Integer, default=1)
+
+
+class WishlistItem(db.Model):
+    __tablename__ = "wishlist_items"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50), nullable=True)
+    color = db.Column(db.String(50), nullable=True)
+    season = db.Column(db.String(20), nullable=True)
+    price = db.Column(db.Float, nullable=True)
+    url = db.Column(db.String(500), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

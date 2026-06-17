@@ -28,6 +28,7 @@ def create_app(config_class=Config):
     from routes.calendar import calendar_bp
     from routes.analytics import analytics_bp
     from routes.packing import packing_bp
+    from routes.wishlist import wishlist_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp, url_prefix="/")
@@ -36,5 +37,6 @@ def create_app(config_class=Config):
     app.register_blueprint(calendar_bp, url_prefix="/calendar")
     app.register_blueprint(analytics_bp, url_prefix="/analytics")
     app.register_blueprint(packing_bp, url_prefix="/packing")
+    app.register_blueprint(wishlist_bp, url_prefix="/wishlist")
 
     return app

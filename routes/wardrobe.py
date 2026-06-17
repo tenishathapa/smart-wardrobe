@@ -1,9 +1,12 @@
 import os
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
 from models.clothing import ClothingItem
+from models.outfit import OutfitItem
+from models.history import WearHistory
+
 wardrobe_bp = Blueprint("wardrobe", __name__)
 
 
@@ -18,6 +21,23 @@ def save_image(file):
         file.save(path)
         return filename
     return None
+
+
+def get_item_wear_stats(item_id, user_id):
+    count = (
+        db.session.query(db.func.count(WearHistory.id))
+        .join(OutfitItem, WearHistory.outfit_id == OutfitItem.outfit_id)
+        .filter(OutfitItem.clothing_item_id == item_id, WearHistory.user_id == user_id)
+        .scalar()
+        or 0
+    )
+    last_worn = (
+        db.session.query(db.func.max(WearHistory.worn_date))
+        .join(OutfitItem, WearHistory.outfit_id == OutfitItem.outfit_id)
+        .filter(OutfitItem.clothing_item_id == item_id, WearHistory.user_id == user_id)
+        .scalar()
+    )
+    return {"wear_count": count, "last_worn": last_worn}
 
 
 @wardrobe_bp.route("/")
@@ -44,6 +64,10 @@ def index():
 
     items = query.order_by(ClothingItem.created_at.desc()).all()
 
+    item_stats = {}
+    for item in items:
+        item_stats[item.id] = get_item_wear_stats(item.id, current_user.id)
+
     categories = db.session.query(ClothingItem.category).filter_by(user_id=current_user.id).distinct().all()
     colors = db.session.query(ClothingItem.color).filter_by(user_id=current_user.id).distinct().all()
     seasons = db.session.query(ClothingItem.season).filter_by(user_id=current_user.id).distinct().all()
@@ -52,11 +76,30 @@ def index():
     return render_template(
         "wardrobe/index.html",
         items=items,
+        item_stats=item_stats,
         categories=[c[0] for c in categories],
         colors=[c[0] for c in colors],
         seasons=[s[0] for s in seasons],
         occasions=[o[0] for o in occasions],
     )
+
+
+@wardrobe_bp.route("/detail/<int:item_id>")
+@login_required
+def detail(item_id):
+    item = ClothingItem.query.filter_by(id=item_id, user_id=current_user.id).first_or_404()
+    stats = get_item_wear_stats(item.id, current_user.id)
+    return jsonify({
+        "id": item.id,
+        "name": item.name,
+        "category": item.category,
+        "color": item.color,
+        "season": item.season,
+        "occasion": item.occasion,
+        "image_path": item.image_path,
+        "wear_count": stats["wear_count"],
+        "last_worn": stats["last_worn"].strftime("%b %d, %Y") if stats["last_worn"] else None,
+    })
 
 
 @wardrobe_bp.route("/add", methods=["GET", "POST"])

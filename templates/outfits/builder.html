@@ -7,18 +7,18 @@
         <h3 class="mb-1" style="font-family: var(--font-display);">{{ 'Refine' if outfit else 'Design' }} Your Outfit</h3>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Pick pieces to build the perfect look</p>
         <form method="POST">
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label">Outfit Name</label>
             <input type="text" name="name" class="form-control" value="{{ outfit.name if outfit else '' }}" placeholder="e.g. College Outfit" required>
           </div>
 
-          <div class="row g-3 mb-4">
+          <div class="row g-3 mb-3">
             <div class="col-md-6">
               <label class="form-label"><i class="bi bi-arrow-up-circle" style="color: var(--pink);"></i> Top</label>
               <select name="item_top" class="form-select outfit-select" data-slot="top">
                 <option value="">Select top...</option>
                 {% for t in tops %}
-                <option value="{{ t.id }}" data-color="{{ t.color }}" {{ 'selected' if outfit and outfit.items.filter_by(slot='top').first() and outfit.items.filter_by(slot='top').first().clothing_item_id == t.id }}>{{ t.name }} <span style="color: var(--text-muted);">({{ t.color }})</span></option>
+                <option value="{{ t.id }}" data-color="{{ t.color }}" {{ 'selected' if outfit and outfit.items.filter_by(slot='top').first() and outfit.items.filter_by(slot='top').first().clothing_item_id == t.id }}>{{ t.name }} ({{ t.color }})</option>
                 {% endfor %}
               </select>
             </div>
@@ -27,7 +27,7 @@
               <select name="item_bottom" class="form-select outfit-select" data-slot="bottom">
                 <option value="">Select bottom...</option>
                 {% for b in bottoms %}
-                <option value="{{ b.id }}" data-color="{{ b.color }}" {{ 'selected' if outfit and outfit.items.filter_by(slot='bottom').first() and outfit.items.filter_by(slot='bottom').first().clothing_item_id == b.id }}>{{ b.name }} <span style="color: var(--text-muted);">({{ b.color }})</span></option>
+                <option value="{{ b.id }}" data-color="{{ b.color }}" {{ 'selected' if outfit and outfit.items.filter_by(slot='bottom').first() and outfit.items.filter_by(slot='bottom').first().clothing_item_id == b.id }}>{{ b.name }} ({{ b.color }})</option>
                 {% endfor %}
               </select>
             </div>
@@ -36,7 +36,7 @@
               <select name="item_shoes" class="form-select outfit-select" data-slot="shoes">
                 <option value="">Select shoes...</option>
                 {% for s in shoes %}
-                <option value="{{ s.id }}" data-color="{{ s.color }}" {{ 'selected' if outfit and outfit.items.filter_by(slot='shoes').first() and outfit.items.filter_by(slot='shoes').first().clothing_item_id == s.id }}>{{ s.name }} <span style="color: var(--text-muted);">({{ s.color }})</span></option>
+                <option value="{{ s.id }}" data-color="{{ s.color }}" {{ 'selected' if outfit and outfit.items.filter_by(slot='shoes').first() and outfit.items.filter_by(slot='shoes').first().clothing_item_id == s.id }}>{{ s.name }} ({{ s.color }})</option>
                 {% endfor %}
               </select>
             </div>
@@ -45,10 +45,15 @@
               <select name="item_accessory" class="form-select outfit-select" data-slot="accessory">
                 <option value="">Select accessory...</option>
                 {% for a in accessories %}
-                <option value="{{ a.id }}" data-color="{{ a.color }}" {{ 'selected' if outfit and outfit.items.filter_by(slot='accessory').first() and outfit.items.filter_by(slot='accessory').first().clothing_item_id == a.id }}>{{ a.name }} <span style="color: var(--text-muted);">({{ a.color }})</span></option>
+                <option value="{{ a.id }}" data-color="{{ a.color }}" {{ 'selected' if outfit and outfit.items.filter_by(slot='accessory').first() and outfit.items.filter_by(slot='accessory').first().clothing_item_id == a.id }}>{{ a.name }} ({{ a.color }})</option>
                 {% endfor %}
               </select>
             </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-chat-quote"></i> Notes</label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="Optional notes about this outfit...">{{ outfit.notes if outfit else '' }}</textarea>
           </div>
 
           <div id="colorHint" class="d-none" style="padding: 14px 18px; border-radius: 12px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;"></div>
@@ -67,14 +72,11 @@
 {% block extra_scripts %}
 <script>
 var colorRules = {{ color_rules | tojson }};
-
 document.querySelectorAll('.outfit-select').forEach(function (s) { s.addEventListener('change', updateColorHint); });
-
 function updateColorHint() {
   var hint = document.getElementById('colorHint');
   var top = document.querySelector('[name="item_top"] option:checked');
   var bottom = document.querySelector('[name="item_bottom"] option:checked');
-
   if (top && top.value && bottom && bottom.value) {
     var tc = top.getAttribute('data-color');
     var bc = bottom.getAttribute('data-color');
@@ -83,17 +85,13 @@ function updateColorHint() {
     var ok = compat.some(function (c) { return c.toLowerCase() === bc.toLowerCase(); });
     hint.classList.remove('d-none');
     if (ok) {
-      hint.style.background = 'var(--lavender-light)';
-      hint.style.color = '#5a4a7a';
-      hint.innerHTML = '<i class="bi bi-check-circle-fill" style="color: #5a4a7a;"></i> ' + tc + ' and ' + bc + ' look great together!';
+      hint.style.background = 'var(--lavender-light)'; hint.style.color = '#5a4a7a';
+      hint.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + tc + ' and ' + bc + ' look great together!';
     } else {
-      hint.style.background = 'var(--gold-soft)';
-      hint.style.color = '#8a6d3b';
-      hint.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="color: #d4a574;"></i> Try these instead: ' + compat.join(', ');
+      hint.style.background = 'var(--gold-soft)'; hint.style.color = '#8a6d3b';
+      hint.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Try: ' + compat.join(', ');
     }
-  } else {
-    hint.classList.add('d-none');
-  }
+  } else { hint.classList.add('d-none'); }
 }
 updateColorHint();
 </script>

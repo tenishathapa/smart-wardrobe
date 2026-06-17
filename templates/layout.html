@@ -72,6 +72,11 @@
             <i class="bi bi-bag-check-fill"></i><span> Packing</span>
           </a>
         </li>
+        <li>
+          <a href="{{ url_for('wishlist.index') }}" class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('wishlist') }}">
+            <i class="bi bi-heart-fill"></i><span> Wishlist</span>
+          </a>
+        </li>
       </ul>
       <hr style="border-color: var(--border);">
       <div class="d-flex align-items-center gap-2 mb-2">
