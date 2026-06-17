@@ -1,5 +1,5 @@
-from datetime import datetime
-from flask import Blueprint, render_template
+from datetime import datetime, date
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
 from models.clothing import ClothingItem
@@ -67,6 +67,15 @@ def index():
 
     suggestion = suggest_outfit_for_today(current_user.id)
 
+    today = date.today()
+    worn_today = (
+        WearHistory.query
+        .filter_by(user_id=current_user.id, worn_date=today)
+        .order_by(WearHistory.created_at.desc())
+        .all()
+    )
+    all_outfits = Outfit.query.filter_by(user_id=current_user.id).order_by(Outfit.name).all()
+
     return render_template(
         "dashboard/index.html",
         total_clothes=total_clothes,
@@ -77,4 +86,23 @@ def index():
         suggestion=suggestion,
         current_season=current_season,
         season_items=season_items,
+        worn_today=worn_today,
+        all_outfits=all_outfits,
     )
+
+
+@dashboard_bp.route("/wear-today", methods=["POST"])
+@login_required
+def wear_today():
+    outfit_id = request.form.get("outfit_id")
+    if not outfit_id:
+        flash("Select an outfit.", "warning")
+        return redirect(url_for("dashboard.index"))
+    outfit = Outfit.query.filter_by(id=int(outfit_id), user_id=current_user.id).first()
+    if not outfit:
+        flash("Outfit not found.", "danger")
+        return redirect(url_for("dashboard.index"))
+    db.session.add(WearHistory(user_id=current_user.id, outfit_id=outfit.id, worn_date=date.today()))
+    db.session.commit()
+    flash(f"Logged '{outfit.name}' as worn today!", "success")
+    return redirect(url_for("dashboard.index"))

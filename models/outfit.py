@@ -10,6 +10,7 @@ class Outfit(db.Model):
     name = db.Column(db.String(100), nullable=False)
     notes = db.Column(db.Text, nullable=True)
     is_favorite = db.Column(db.Boolean, default=False)
+    collage_data = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     items = db.relationship("OutfitItem", backref="outfit", lazy="dynamic", cascade="all, delete-orphan")
@@ -33,4 +34,14 @@ class PlannedOutfit(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     outfit_id = db.Column(db.Integer, db.ForeignKey("outfits.id"), nullable=False)
     planned_date = db.Column(db.Date, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ShareLink(db.Model):
+    __tablename__ = "share_links"
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), unique=True, nullable=False)
+    outfit_id = db.Column(db.Integer, db.ForeignKey("outfits.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

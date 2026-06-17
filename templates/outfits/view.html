@@ -1,5 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
+<div id="shareToast" class="toast align-items-center text-bg-success border-0 position-fixed top-0 end-0 m-3" role="alert" style="z-index: 9999;">
+  <div class="d-flex">
+    <div class="toast-body" id="shareToastMsg">Link copied!</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>
 <div class="row justify-content-center animate-fadeIn">
   <div class="col-lg-6">
     <div class="card" style="border: 1px solid var(--border);">
@@ -23,6 +29,26 @@
         </div>
         {% endif %}
 
+        {% if outfit.collage_data %}
+        {% set collage = outfit.collage_data|from_json %}
+        {% if collage %}
+        <div class="collage-preview" style="position:relative;width:100%;height:300px;background:var(--pink-soft);border-radius:16px;overflow:hidden;margin-bottom:1rem;">
+          {% for entry in collage %}
+          {% set found = outfit.items|selectattr('clothing_item_id', 'equalto', entry.item_id)|first %}
+          <div style="position:absolute;left:{{ entry.x }}px;top:{{ entry.y }}px;width:{{ entry.w }}px;height:{{ entry.h }}px;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);border:2px solid #fff;">
+            {% if found and found.clothing_item.image_path %}
+            <img src="{{ url_for('static', filename='uploads/' + found.clothing_item.image_path) }}" style="width:100%;height:100%;object-fit:cover;" alt="{{ found.clothing_item.name }}">
+            {% else %}
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--pink-soft);color:var(--text-light);">
+              <i class="bi bi-image"></i>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endif %}
+
         <div class="row g-3 mt-2">
           {% for item in outfit.items %}
           <div class="col-6">
@@ -44,15 +70,39 @@
         </div>
 
         <div class="mt-4 d-flex gap-2 flex-wrap">
+          <form method="POST" action="{{ url_for('outfits.wear', outfit_id=outfit.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Wear Today</button>
+          </form>
           <a href="{{ url_for('outfits.edit', outfit_id=outfit.id) }}" class="btn btn-primary"><i class="bi bi-pencil"></i> Edit</a>
+          <button class="btn btn-outline-primary" onclick="shareOutfit({{ outfit.id }})"><i class="bi bi-share-fill"></i> Share</button>
+          {% if outfit.collage_data %}
+          <a href="{{ url_for('outfits.collage_edit', outfit_id=outfit.id) }}" class="btn btn-outline-primary"><i class="bi bi-layers-fill"></i> Edit Collage</a>
+          {% endif %}
           <form method="POST" action="{{ url_for('outfits.duplicate', outfit_id=outfit.id) }}" style="display:inline;">
             <button type="submit" class="btn btn-outline-primary"><i class="bi bi-files"></i> Duplicate</button>
           </form>
-          <a href="{{ url_for('calendar.index') }}" class="btn btn-success"><i class="bi bi-calendar-plus"></i> Plan</a>
+          <a href="{{ url_for('calendar.index') }}" class="btn btn-warning"><i class="bi bi-calendar-plus"></i> Plan</a>
           <a href="{{ url_for('outfits.index') }}" class="btn btn-outline-primary"><i class="bi bi-arrow-left"></i> Back</a>
         </div>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function shareOutfit(id) {
+  fetch('/outfits/share/' + id, { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(data.url);
+      }
+      var toast = new bootstrap.Toast(document.getElementById('shareToast'));
+      document.getElementById('shareToastMsg').textContent = 'Share link copied to clipboard!';
+      toast.show();
+    });
+}
+</script>
 {% endblock %}

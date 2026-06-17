@@ -89,6 +89,15 @@ def index():
 def detail(item_id):
     item = ClothingItem.query.filter_by(id=item_id, user_id=current_user.id).first_or_404()
     stats = get_item_wear_stats(item.id, current_user.id)
+    wear_history = (
+        db.session.query(WearHistory.worn_date, Outfit.name)
+        .join(Outfit, WearHistory.outfit_id == Outfit.id)
+        .join(OutfitItem, WearHistory.outfit_id == OutfitItem.outfit_id)
+        .filter(OutfitItem.clothing_item_id == item_id, WearHistory.user_id == current_user.id)
+        .order_by(WearHistory.worn_date.desc())
+        .limit(10)
+        .all()
+    )
     return jsonify({
         "id": item.id,
         "name": item.name,
@@ -99,6 +108,7 @@ def detail(item_id):
         "image_path": item.image_path,
         "wear_count": stats["wear_count"],
         "last_worn": stats["last_worn"].strftime("%b %d, %Y") if stats["last_worn"] else None,
+        "wear_history": [{"date": w.worn_date.strftime("%b %d, %Y"), "outfit": w[1]} for w in wear_history],
     })
 
 

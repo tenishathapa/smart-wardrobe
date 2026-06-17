@@ -1,3 +1,4 @@
+import json
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -38,5 +39,12 @@ def create_app(config_class=Config):
     app.register_blueprint(analytics_bp, url_prefix="/analytics")
     app.register_blueprint(packing_bp, url_prefix="/packing")
     app.register_blueprint(wishlist_bp, url_prefix="/wishlist")
+
+    @app.template_filter("from_json")
+    def from_json_filter(value):
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            return []
 
     return app

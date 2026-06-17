@@ -80,7 +80,46 @@
   </div>
 </div>
 
-{% if recommendations %}
+<div class="row mt-4 animate-slideUp">
+  <div class="col-12">
+    <div class="card" style="border-left: 4px solid var(--gold); border-radius: 16px;">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex align-items-center">
+            <div style="width: 40px; height: 40px; background: rgba(212,165,116,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+              <i class="bi bi-check2-circle" style="color: var(--gold);"></i>
+            </div>
+            <div>
+              <h5 class="mb-0">What I Wore Today</h5>
+              <small style="color: var(--text-muted);">Log what you're wearing right now</small>
+            </div>
+          </div>
+        </div>
+        {% if worn_today %}
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          {% for w in worn_today %}
+          <span style="background: var(--pink-soft); color: var(--pink-deep); padding: 6px 14px; border-radius: 10px; font-weight: 500; font-size: 0.85rem;">
+            <i class="bi bi-check-circle-fill" style="color: var(--pink);"></i> {{ w.outfit.name }}
+            <small style="color: var(--text-muted); font-weight:400;">{{ w.worn_date.strftime('%b %d') }}</small>
+          </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <form method="POST" action="{{ url_for('dashboard.wear_today') }}" class="d-flex gap-2 flex-wrap align-items-center">
+          <select name="outfit_id" class="form-select" style="width:auto;min-width:200px;border-radius:10px;" required>
+            <option value="">-- Select outfit worn today --</option>
+            {% for o in all_outfits %}
+            <option value="{{ o.id }}">{{ o.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Log as Worn</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if weather %}
 <div class="row mt-4 animate-slideUp">
   <div class="col-12">
     <div class="card" style="border-left: 4px solid var(--pink); border-radius: 16px;">
@@ -174,6 +213,7 @@
             <button type="submit" class="btn btn-outline-primary"><i class="bi bi-shuffle"></i> Auto-Generate</button>
           </form>
           <a href="{{ url_for('calendar.index') }}" class="btn btn-warning"><i class="bi bi-calendar"></i> Plan Outfit</a>
+          <a href="{{ url_for('outfits.collage') }}" class="btn btn-outline-primary"><i class="bi bi-layers-fill"></i> Collage</a>
           <a href="{{ url_for('outfits.favorites') }}" class="btn btn-outline-primary"><i class="bi bi-star-fill"></i> Favorites</a>
           <a href="{{ url_for('wishlist.index') }}" class="btn btn-outline-primary"><i class="bi bi-heart-fill"></i> Wishlist</a>
         </div>

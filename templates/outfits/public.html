@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ outfit.name }} — Shared Outfit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap');
+    :root {
+      --pink: #e84393; --pink-soft: #fce4ec; --pink-lighter: #f8e8f0;
+      --pink-deep: #8e0b4a; --lavender: #b39ddb; --lavender-light: #e8e0f0;
+      --gold: #d4a574; --gold-soft: #f5ede4; --border: #e8e0ec;
+      --text: #2d1b36; --text-muted: #8a7a90; --card-bg: #fff;
+      --font-display: 'Playfair Display', serif; --font-body: 'Quicksand', sans-serif;
+    }
+    body {
+      font-family: var(--font-body); background: var(--pink-soft); color: var(--text); min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .shared-card {
+      background: var(--card-bg); border-radius: 24px; box-shadow: 0 12px 48px rgba(0,0,0,0.08);
+      padding: 2rem; max-width: 500px; width: 100%; margin: 2rem 1rem;
+    }
+    .item-img {
+      width: 100%; height: 130px; object-fit: cover; border-radius: 12px;
+    }
+    .item-placeholder {
+      height: 130px; background: var(--pink-soft); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="shared-card text-center">
+    <div style="width: 56px; height: 56px; background: var(--pink-soft); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+      <i class="bi bi-wardrobe" style="font-size: 1.8rem; color: var(--pink);"></i>
+    </div>
+    <h2 style="font-family: var(--font-display); margin-bottom: 0.25rem;">{{ outfit.name }}</h2>
+    <small style="color: var(--text-muted);">Shared outfit from Smart Wardrobe</small>
+
+    {% if outfit.notes %}
+    <div style="background: var(--gold-soft); border-radius: 10px; padding: 10px; margin: 1rem 0; font-size: 0.9rem;">
+      <i class="bi bi-chat-quote" style="color: var(--gold);"></i> {{ outfit.notes }}
+    </div>
+    {% endif %}
+
+    <div class="row g-2 mt-3">
+      {% for item in outfit.items %}
+      <div class="col-6">
+        <div style="border: 1px solid var(--border); border-radius: 14px; overflow: hidden;">
+          {% if item.clothing_item.image_path %}
+          <img src="{{ url_for('static', filename='uploads/' + item.clothing_item.image_path) }}" class="item-img" alt="{{ item.clothing_item.name }}">
+          {% else %}
+          <div class="item-placeholder"><i class="bi bi-image" style="font-size: 2rem; color: var(--text-light);"></i></div>
+          {% endif %}
+          <div style="padding: 6px;">
+            <small style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.65rem;">{{ item.slot }}</small>
+            <p style="margin:0; font-weight:600; font-size:0.85rem;">{{ item.clothing_item.name }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <hr style="border-color: var(--border); margin: 1.5rem 0;">
+    <p style="color: var(--text-muted); font-size: 0.8rem;">
+      <i class="bi bi-wardrobe"></i> Created with <a href="#" style="color: var(--pink); text-decoration: none;">Smart Wardrobe</a>
+    </p>
+  </div>
+</body>
+</html>

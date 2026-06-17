@@ -48,8 +48,13 @@
           </a>
         </li>
         <li>
-          <a href="{{ url_for('outfits.index') }}" class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('outfits') }}">
+          <a href="{{ url_for('outfits.index') }}" class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('outfits') and request.endpoint not in ['outfits.favorites', 'outfits.collage'] }}">
             <i class="bi bi-palette-fill"></i><span> Outfits</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('outfits.collage') }}" class="nav-link {{ 'active' if request.endpoint == 'outfits.collage' }}">
+            <i class="bi bi-layers-fill"></i><span> Collage</span>
           </a>
         </li>
         <li>

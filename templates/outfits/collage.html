@@ -1,0 +1,305 @@
+{% extends "layout.html" %}
+{% block extra_head %}
+<style>
+.collage-wrap {
+  display: flex; gap: 16px; height: calc(100vh - 120px); min-height: 500px;
+}
+.palette {
+  width: 260px; flex-shrink: 0; overflow-y: auto;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 16px; padding: 12px;
+}
+.palette-item {
+  display: inline-flex; flex-direction: column; align-items: center;
+  width: calc(50% - 6px); margin: 3px; padding: 6px;
+  border: 2px dashed var(--border); border-radius: 10px;
+  cursor: grab; transition: all 0.2s; background: var(--pink-soft);
+  user-select: none;
+}
+.palette-item:hover { border-color: var(--pink); transform: translateY(-1px); }
+.palette-item:active { cursor: grabbing; }
+.palette-item img { width: 100%; height: 60px; object-fit: cover; border-radius: 6px; }
+.palette-item .no-img { height: 60px; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 1.5rem; }
+.palette-item label { font-size: 0.65rem; margin-top: 2px; color: var(--text-muted); text-align: center; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
+.palette h6 { font-family: var(--font-display); margin-bottom: 8px; padding-top: 8px; }
+.palette h6:first-child { padding-top: 0; }
+
+.canvas-area {
+  flex: 1; position: relative;
+  background: var(--card-bg); border: 2px dashed var(--border);
+  border-radius: 16px; overflow: hidden;
+  transition: border-color 0.3s, background 0.3s;
+}
+.canvas-area.drag-over { border-color: var(--pink); background: var(--pink-soft); }
+.canvas-item {
+  position: absolute; cursor: grab; border-radius: 12px;
+  border: 2px solid transparent; transition: border-color 0.2s;
+  overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  user-select: none; z-index: 10;
+}
+.canvas-item:hover { border-color: var(--pink); z-index: 20; }
+.canvas-item.selected { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(232,67,147,0.3); }
+.canvas-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.canvas-item .no-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--pink-soft); color: var(--text-light); font-size: 2rem; }
+.canvas-item .remove-btn {
+  position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+  background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 50%;
+  font-size: 12px; display: none; align-items: center; justify-content: center; cursor: pointer;
+}
+.canvas-item:hover .remove-btn { display: flex; }
+
+.empty-canvas-msg {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  text-align: center; color: var(--text-light); pointer-events: none;
+}
+.empty-canvas-msg i { font-size: 3rem; }
+.empty-canvas-msg p { font-family: var(--font-display); margin-top: 8px; }
+
+.save-bar {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding: 12px 16px; background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 16px; margin-top: 12px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3 animate-fadeIn">
+  <div>
+    <h2 class="page-title mb-0">Outfit Collage</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">Drag items from your wardrobe onto the canvas</p>
+  </div>
+  <a href="{{ url_for('outfits.index') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="collage-wrap animate-fadeIn">
+  <div class="palette" id="palette">
+    <input type="text" id="paletteSearch" class="form-control form-control-sm mb-2" placeholder="Filter items..." oninput="filterPalette()">
+    {% set cats = {'Top': 'Tops', 'Bottom': 'Bottoms', 'Shoes': 'Shoes', 'Accessory': 'Accessories'} %}
+    {% for cat_key, cat_label in cats.items() %}
+    {% set cat_items = items|selectattr('category', 'equalto', cat_key)|list %}
+    {% if cat_items %}
+    <h6>{{ cat_label }}</h6>
+    <div class="d-flex flex-wrap category-group" data-category="{{ cat_key }}">
+      {% for item in cat_items %}
+      <div class="palette-item" draggable="true"
+           data-item-id="{{ item.id }}" data-name="{{ item.name }}"
+           data-image="{{ item.image_path or '' }}" data-slot="{{ item.category.lower() }}"
+           data-category="{{ item.category }}">
+        {% if item.image_path %}
+        <img src="{{ url_for('static', filename='uploads/' + item.image_path) }}" alt="{{ item.name }}">
+        {% else %}
+        <div class="no-img"><i class="bi bi-image"></i></div>
+        {% endif %}
+        <label>{{ item.name }}</label>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="canvas-area" id="canvas">
+    <div class="empty-canvas-msg" id="emptyMsg">
+      <i class="bi bi-arrow-left"></i>
+      <p>Drag items here</p>
+    </div>
+  </div>
+</div>
+
+<form id="saveForm" method="POST" action="{{ url_for('outfits.collage') }}">
+  <input type="hidden" name="collage_data" id="collageDataInput">
+  {% if edit_outfit %}<input type="hidden" name="outfit_id" value="{{ edit_outfit.id }}">{% endif %}
+  <div class="save-bar">
+    <input type="text" name="name" class="form-control form-control-sm" placeholder="Outfit name..." required style="max-width:250px;border-radius:10px;" value="{{ edit_outfit.name if edit_outfit else '' }}">
+    <input type="text" name="notes" class="form-control form-control-sm" placeholder="Notes (optional)" style="max-width:300px;border-radius:10px;" value="{{ edit_outfit.notes if edit_outfit else '' }}">
+    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-save"></i> {{ 'Update Outfit' if edit_outfit else 'Save Outfit' }}</button>
+    <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearCanvas()"><i class="bi bi-trash"></i> Clear</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function() {
+  var canvas = document.getElementById('canvas');
+  var paletteItems = document.querySelectorAll('.palette-item');
+  var collageData = [];
+  var selectedId = null;
+  var isDragging = false;
+  var dragEl = null;
+  var dragOffsetX = 0, dragOffsetY = 0;
+
+  {% if edit_outfit %}
+  try {
+    var saved = JSON.parse({{ edit_outfit.collage_data|tojson|safe }});
+    if (saved && saved.length) {
+      saved.forEach(function(item) { addToCanvas(item.item_id, item.name, item.image, item.slot, item.x, item.y, item.w, item.h); });
+    }
+  } catch(e) {}
+  {% endif %}
+
+  paletteItems.forEach(function(el) {
+    el.addEventListener('dragstart', function(e) {
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        item_id: el.dataset.itemId,
+        name: el.dataset.name,
+        image: el.dataset.image,
+        slot: el.dataset.slot
+      }));
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+  });
+
+  canvas.addEventListener('dragover', function(e) { e.preventDefault(); canvas.classList.add('drag-over'); });
+  canvas.addEventListener('dragleave', function(e) { canvas.classList.remove('drag-over'); });
+
+  canvas.addEventListener('drop', function(e) {
+    e.preventDefault();
+    canvas.classList.remove('drag-over');
+    try {
+      var data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    } catch(err) { return; }
+    var rect = canvas.getBoundingClientRect();
+    var w = 100, h = 100;
+    var x = Math.max(0, Math.min(e.clientX - rect.left - w/2, rect.width - w));
+    var y = Math.max(0, Math.min(e.clientY - rect.top - h/2, rect.height - h));
+    addToCanvas(data.item_id, data.name, data.image, data.slot, x, y, w, h);
+  });
+
+  function addToCanvas(itemId, name, image, slot, x, y, w, h) {
+    var existing = canvas.querySelector('.canvas-item[data-item-id="' + itemId + '"]');
+    if (existing) { selectItem(existing); return; }
+
+    var div = document.createElement('div');
+    div.className = 'canvas-item';
+    div.dataset.itemId = itemId;
+    div.dataset.name = name;
+    div.dataset.slot = slot;
+    div.style.left = x + 'px';
+    div.style.top = y + 'px';
+    div.style.width = (w || 100) + 'px';
+    div.style.height = (h || 100) + 'px';
+
+    if (image) {
+      var img = document.createElement('img');
+      img.src = '/static/uploads/' + image;
+      img.alt = name;
+      div.appendChild(img);
+    } else {
+      var placeholder = document.createElement('div');
+      placeholder.className = 'no-img';
+      placeholder.innerHTML = '<i class="bi bi-image"></i>';
+      div.appendChild(placeholder);
+    }
+
+    var label = document.createElement('div');
+    label.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:#fff;font-size:0.6rem;text-align:center;padding:2px;pointer-events:none;';
+    label.textContent = name;
+    div.appendChild(label);
+
+    var removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+    removeBtn.addEventListener('click', function(e) { e.stopPropagation(); removeItem(div); });
+    div.appendChild(removeBtn);
+
+    div.addEventListener('click', function(e) {
+      if (!isDragging) selectItem(this);
+    });
+
+    makeDraggable(div);
+    canvas.appendChild(div);
+    updateEmptyMsg();
+    selectItem(div);
+    syncData();
+  }
+
+  function makeDraggable(el) {
+    el.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.remove-btn')) return;
+      isDragging = false;
+      dragEl = el;
+      var rect = el.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      el.classList.add('selected');
+
+      function onMove(ev) {
+        isDragging = true;
+        var canvasRect = canvas.getBoundingClientRect();
+        var x = ev.clientX - canvasRect.left - dragOffsetX;
+        var y = ev.clientY - canvasRect.top - dragOffsetY;
+        x = Math.max(0, Math.min(x, canvasRect.width - el.offsetWidth));
+        y = Math.max(0, Math.min(y, canvasRect.height - el.offsetHeight));
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+      }
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        if (isDragging) syncData();
+        isDragging = false;
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  function selectItem(el) {
+    canvas.querySelectorAll('.canvas-item.selected').forEach(function(c) { c.classList.remove('selected'); });
+    if (el) el.classList.add('selected');
+  }
+
+  function removeItem(el) {
+    if (el) { el.remove(); syncData(); updateEmptyMsg(); }
+  }
+
+  function clearCanvas() {
+    if (!confirm('Remove all items from the canvas?')) return;
+    canvas.querySelectorAll('.canvas-item').forEach(function(el) { el.remove(); });
+    collageData = [];
+    syncData();
+    updateEmptyMsg();
+  }
+
+  function updateEmptyMsg() {
+    var msg = document.getElementById('emptyMsg');
+    if (msg) msg.style.display = canvas.querySelectorAll('.canvas-item').length === 0 ? '' : 'none';
+  }
+
+  function syncData() {
+    var items = canvas.querySelectorAll('.canvas-item');
+    collageData = [];
+    items.forEach(function(el) {
+      collageData.push({
+        item_id: parseInt(el.dataset.itemId),
+        name: el.dataset.name,
+        slot: el.dataset.slot,
+        x: parseInt(el.style.left),
+        y: parseInt(el.style.top),
+        w: el.offsetWidth,
+        h: el.offsetHeight
+      });
+    });
+    document.getElementById('collageDataInput').value = JSON.stringify(collageData);
+  }
+
+  window.filterPalette = function() {
+    var q = document.getElementById('paletteSearch').value.toLowerCase();
+    document.querySelectorAll('.palette-item').forEach(function(el) {
+      el.style.display = el.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+    });
+    document.querySelectorAll('.category-group').forEach(function(g) {
+      var visible = Array.from(g.querySelectorAll('.palette-item')).some(function(el) { return el.style.display !== 'none'; });
+      var heading = g.previousElementSibling;
+      if (heading && heading.tagName === 'H6') heading.style.display = visible ? '' : 'none';
+      g.style.display = visible ? '' : 'none';
+    });
+  };
+
+  window.clearCanvas = clearCanvas;
+  updateEmptyMsg();
+})();
+</script>
+{% endblock %}
